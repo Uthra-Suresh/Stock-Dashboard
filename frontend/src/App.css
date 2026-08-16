@@ -20,7 +20,7 @@ body {
   display: grid;
   grid-template-columns: 200px 1fr;
   gap: 32px;
-  max-width: 1180px;
+  max-width: min(1600px, 96vw);
   margin: 0 auto;
   padding: 24px;
   align-items: start;
@@ -319,6 +319,35 @@ button.primary:disabled {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px 12px 8px;
+}
+
+.chart-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.chart-inner {
+  height: 360px;
+}
+
+.chart-fullscreen {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0;
+}
+
+.chart-fullscreen .legend {
+  flex: none;
+}
+
+.chart-fullscreen .chart-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.chart-fullscreen .chart-inner {
+  height: 100%;
 }
 
 .legend {

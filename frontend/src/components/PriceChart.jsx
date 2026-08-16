@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   LineChart,
   Line,
@@ -10,6 +10,11 @@ import {
   ReferenceArea,
   Customized,
 } from "recharts";
+
+// Minimum horizontal space (px) given to each bar before the chart grows
+// wider than its box and a scrollbar takes over, instead of squeezing
+// everything into the visible width.
+const PX_PER_POINT = 6;
 
 const SERIES = [
   { key: "high", label: "High", color: "#378ADD" },
@@ -89,8 +94,53 @@ export default function PriceChart({ rows }) {
   const [dragging, setDragging] = useState(false);
   // chartY is the raw pixel Y from the top of the SVG, from e.chartY
   const [chartY, setChartY] = useState(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  const wrapRef = useRef(null);
+  const scrollRef = useRef(null);
 
   const data = zoomedData ?? rows;
+
+  // Track the visible width of the scroll area so we know when the data
+  // needs more room than it has and should scroll instead of squeeze.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      setContainerWidth(entries[0].contentRect.width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // The Escape key and browser chrome can both end fullscreen without going
+  // through toggleFullscreen, so mirror the real state rather than track our
+  // own boolean.
+  useEffect(() => {
+    function onChange() {
+      setFullscreen(document.fullscreenElement === wrapRef.current);
+    }
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  // Land on the most recent bars whenever the underlying range/interval/
+  // ticker changes, rather than leaving the view scrolled wherever it was.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [rows]);
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      wrapRef.current?.requestFullscreen();
+    }
+  }
+
+  const chartWidth = Math.max(containerWidth, data.length * PX_PER_POINT);
 
   function toggle(key) {
     setHidden((current) => {
@@ -148,10 +198,14 @@ export default function PriceChart({ rows }) {
 
   return (
     <div
-      className="chart"
+      ref={wrapRef}
+      className={`chart ${fullscreen ? "chart-fullscreen" : ""}`}
       style={{ userSelect: dragging ? "none" : "auto" }}
     >
       <div className="legend">
+        <button className="legend-item" onClick={toggleFullscreen}>
+          {fullscreen ? "⤡ Exit fullscreen" : "⤢ Fullscreen"}
+        </button>
         {SERIES.map((series) => (
           <button
             key={series.key}
@@ -176,61 +230,65 @@ export default function PriceChart({ rows }) {
         )}
       </div>
 
-      <ResponsiveContainer width="100%" height={360}>
-        <LineChart
-          data={data}
-          margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-        >
-          <CartesianGrid stroke="#eee" vertical={false} />
-          <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 12 }} />
-          <YAxis
-            domain={["dataMin - 5", "dataMax + 5"]}
-            width={64}
-            tick={{ fontSize: 12 }}
-          />
-          <Tooltip
-            content={<ChartTooltip />}
-            // Vertical crosshair — shows the date at any x position
-            cursor={{ stroke: "#999", strokeWidth: 1, strokeDasharray: "3 3" }}
-            isAnimationActive={false}
-          />
+      <div className="chart-scroll" ref={scrollRef}>
+        <div className="chart-inner" style={{ width: chartWidth }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={data}
+              margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
+            >
+              <CartesianGrid stroke="#eee" vertical={false} />
+              <XAxis dataKey="date" minTickGap={50} tick={{ fontSize: 12 }} />
+              <YAxis
+                domain={["dataMin - 5", "dataMax + 5"]}
+                width={64}
+                tick={{ fontSize: 12 }}
+              />
+              <Tooltip
+                content={<ChartTooltip />}
+                // Vertical crosshair — shows the date at any x position
+                cursor={{ stroke: "#999", strokeWidth: 1, strokeDasharray: "3 3" }}
+                isAnimationActive={false}
+              />
 
-          {SERIES.filter((s) => !hidden.has(s.key)).map((series) => (
-            <Line
-              key={series.key}
-              type="monotone"
-              dataKey={series.key}
-              name={series.label}
-              stroke={series.color}
-              strokeWidth={1}
-              dot={false}
-              activeDot={{ r: 3, strokeWidth: 0 }}
-              isAnimationActive={false}
-            />
-          ))}
+              {SERIES.filter((s) => !hidden.has(s.key)).map((series) => (
+                <Line
+                  key={series.key}
+                  type="monotone"
+                  dataKey={series.key}
+                  name={series.label}
+                  stroke={series.color}
+                  strokeWidth={1}
+                  dot={false}
+                  activeDot={{ r: 3, strokeWidth: 0 }}
+                  isAnimationActive={false}
+                />
+              ))}
 
-          {/* Drag-to-zoom selection highlight */}
-          {dragging && dragStart && dragEnd && (
-            <ReferenceArea
-              x1={dragStart}
-              x2={dragEnd}
-              fill="#378ADD"
-              fillOpacity={0.15}
-              stroke="#378ADD"
-              strokeOpacity={0.5}
-            />
-          )}
+              {/* Drag-to-zoom selection highlight */}
+              {dragging && dragStart && dragEnd && (
+                <ReferenceArea
+                  x1={dragStart}
+                  x2={dragEnd}
+                  fill="#378ADD"
+                  fillOpacity={0.15}
+                  stroke="#378ADD"
+                  strokeOpacity={0.5}
+                />
+              )}
 
-          {/* Horizontal crosshair + Y price badge — rendered last so it's on top */}
-          <Customized
-            component={(props) => <YCrosshairLayer {...props} chartY={chartY} />}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+              {/* Horizontal crosshair + Y price badge — rendered last so it's on top */}
+              <Customized
+                component={(props) => <YCrosshairLayer {...props} chartY={chartY} />}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }
