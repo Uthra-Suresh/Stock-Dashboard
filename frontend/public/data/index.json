@@ -1,0 +1,33 @@
+{
+  "updated": "2026-08-16T12:33:28+00:00",
+  "tickers": [
+    {
+      "symbol": "SIGMAADV",
+      "last": 660.1,
+      "changePct": -3.94,
+      "asOf": "2026-08-14",
+      "rows": 1237
+    },
+    {
+      "symbol": "ETERNAL",
+      "last": 318.5,
+      "changePct": 0.16,
+      "asOf": "2026-08-14",
+      "rows": 1238
+    },
+    {
+      "symbol": "MANIPALHOS",
+      "last": 706.95,
+      "changePct": 1.68,
+      "asOf": "2026-08-14",
+      "rows": 8
+    },
+    {
+      "symbol": "SBIN",
+      "last": 1067.7,
+      "changePct": -1.41,
+      "asOf": "2026-08-14",
+      "rows": 1238
+    }
+  ]
+}
