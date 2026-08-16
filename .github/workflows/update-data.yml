@@ -50,7 +50,21 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "Update prices $(date -u +%F)"
-            git push
+
+            # The checkout happened at the start of this run. If anything
+            # landed on the branch since then - a push from your laptop, or
+            # another workflow - our push is rejected as non-fast-forward.
+            # Rebase our single data commit on top of whatever is there now
+            # and try again. Safe here because this job only ever touches
+            # frontend/public/data, so it cannot conflict with your edits.
+            for attempt in 1 2 3; do
+              if git push; then
+                break
+              fi
+              echo "Push rejected, rebasing (attempt $attempt)"
+              git pull --rebase origin "$GITHUB_REF_NAME"
+            done
+
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
