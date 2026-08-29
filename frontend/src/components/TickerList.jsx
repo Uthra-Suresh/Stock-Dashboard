@@ -2,7 +2,7 @@
 const REPO = "https://github.com/Uthra-Suresh/Stock-Dashboard";
 const EDIT_URL = `${REPO}/edit/main/tickers.json`;
 
-export default function TickerList({ tickers, selected, onSelect, updated }) {
+export default function TickerList({ tickers, selected, onSelect, updated, live }) {
   return (
     <aside className="tickers">
       <h3>Tickers</h3>
@@ -11,21 +11,28 @@ export default function TickerList({ tickers, selected, onSelect, updated }) {
         <p className="empty">Nothing tracked yet.</p>
       ) : (
         <ul>
-          {tickers.map((t) => (
-            <li key={t.symbol} className={t.symbol === selected ? "active" : ""}>
-              <button className="ticker-name" onClick={() => onSelect(t.symbol)}>
-                <span>{t.symbol}</span>
-                <span className="ticker-price">
-                  {t.last?.toFixed(2)}
-                  <em className={t.changePct > 0 ? "up" : t.changePct < 0 ? "down" : ""}>
-                    {t.changePct == null
-                      ? ""
-                      : `${t.changePct > 0 ? "+" : ""}${t.changePct}%`}
-                  </em>
-                </span>
-              </button>
-            </li>
-          ))}
+          {tickers.map((t) => {
+            const liveQuote = live?.prices[t.symbol];
+            const isLive = liveQuote?.ok;
+            const price = isLive ? liveQuote.lastPrice : t.last;
+            const changePct = isLive ? liveQuote.pChange : t.changePct;
+            return (
+              <li key={t.symbol} className={t.symbol === selected ? "active" : ""}>
+                <button className="ticker-name" onClick={() => onSelect(t.symbol)}>
+                  <span>
+                    {t.symbol}
+                    {isLive && <i className="live-dot" title="Live" />}
+                  </span>
+                  <span className="ticker-price">
+                    {price?.toFixed(2)}
+                    <em className={changePct > 0 ? "up" : changePct < 0 ? "down" : ""}>
+                      {changePct == null ? "" : `${changePct > 0 ? "+" : ""}${changePct}%`}
+                    </em>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
 

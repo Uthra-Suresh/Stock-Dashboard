@@ -1,0 +1,17 @@
+{
+  "name": "stock-dashboard-live-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Small always-on proxy exposing live NSE quotes and today's intraday trace, wrapping stock-nse-india so the static frontend never talks to nseindia.com directly.",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "stock-nse-india": "1.4.0"
+  }
+}

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTrackedTickers, fetchHistory } from "./data";
+import { useLivePrices } from "./livePrices";
 import { toWeekly } from "./resample";
 import TickerList from "./components/TickerList";
 import PriceChart from "./components/PriceChart";
 import PriceTable from "./components/PriceTable";
+import IntradayChart from "./components/IntradayChart";
 import "./App.css";
 
 function isoDate(d) {
@@ -26,6 +28,7 @@ const PRESETS = [
 
 export default function App() {
   const { tickers, updated, error: listError } = useTrackedTickers();
+  const live = useLivePrices(tickers.map((t) => t.symbol));
 
   const [selected, setSelected] = useState("");
   const [start, setStart] = useState(monthsAgo(3));
@@ -98,6 +101,8 @@ export default function App() {
   const periodReturn =
     first && last ? (((last.close - first.close) / first.close) * 100).toFixed(2) : null;
 
+  const liveQuote = live.prices[selected];
+
   return (
     <div className="page">
       <TickerList
@@ -105,6 +110,7 @@ export default function App() {
         selected={selected}
         onSelect={selectTicker}
         updated={updated}
+        live={live}
       />
 
       <main>
@@ -144,9 +150,25 @@ export default function App() {
         {(error || listError) && <p className="error">{error || listError}</p>}
         {loading && <p className="empty">Loading history…</p>}
 
+        {selected && <IntradayChart symbol={selected} />}
+
         {enriched.length > 0 && (
           <>
             <div className="cards">
+              <div className="card">
+                <span>Live price</span>
+                {liveQuote?.ok ? (
+                  <strong className={liveQuote.pChange >= 0 ? "up" : "down"}>
+                    {liveQuote.lastPrice.toFixed(2)}{" "}
+                    <span className="muted">
+                      ({liveQuote.pChange >= 0 ? "+" : ""}
+                      {liveQuote.pChange.toFixed(2)}%)
+                    </span>
+                  </strong>
+                ) : (
+                  <strong className="muted">Unavailable</strong>
+                )}
+              </div>
               <div className="card">
                 <span>Last close</span>
                 <strong>{last.close.toFixed(2)}</strong>
