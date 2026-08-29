@@ -57,3 +57,25 @@ export async function fetchHistory(symbol) {
   const data = await response.json();
   return data.rows;
 }
+
+/**
+ * Dates for which an intraday archive exists for this symbol, oldest first.
+ * Archiving only starts once snapshot-intraday.yml is deployed, so this is
+ * empty (or 404s) until the first end-of-day snapshot has run.
+ */
+export async function fetchIntradayDates(symbol) {
+  const response = await fetch(`${DATA}intraday/${symbol}/index.json`);
+  if (!response.ok) return [];
+  const data = await response.json();
+  return data.dates ?? [];
+}
+
+/** One archived day's intraday trace for a symbol: [{ time, price }]. */
+export async function fetchIntradayForDate(symbol, date) {
+  const response = await fetch(`${DATA}intraday/${symbol}/${date}.json`);
+  if (!response.ok) {
+    throw new Error(`No intraday archive for ${symbol} on ${date}.`);
+  }
+  const data = await response.json();
+  return data.rows;
+}

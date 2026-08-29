@@ -1,0 +1,67 @@
+name: Snapshot intraday
+
+on:
+  schedule:
+    # 10:15 UTC = 15:45 IST, a 15-minute buffer after the 15:30 IST NSE close.
+    # Weekdays only. Cron on GitHub is always UTC, never your local time.
+    - cron: "15 10 * * 1-5"
+  # Lets you run it by hand from the Actions tab.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Stop two runs from committing at the same time and colliding.
+concurrency:
+  group: snapshot-intraday
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - run: pip install -r scripts/requirements.txt
+
+      - name: Archive today's intraday trace
+        run: python scripts/snapshot_intraday.py
+
+      - name: Commit archive
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/public/data/intraday
+
+          # On a holiday, or if the proxy is unreachable, nothing changes and
+          # an empty commit would fail the step. Only commit when there is
+          # actually a diff.
+          if git diff --staged --quiet; then
+            echo "No changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Archive intraday $(date -u +%F)"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # A push made with the built-in GITHUB_TOKEN does not trigger other
+  # workflows, so the commit above never sets off deploy.yml on its own.
+  # Calling it directly is the fix -- same reasoning as update-data.yml.
+  deploy:
+    needs: snapshot
+    if: needs.snapshot.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

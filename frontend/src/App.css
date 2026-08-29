@@ -350,6 +350,18 @@ button.primary:disabled {
   height: 100%;
 }
 
+.intraday-inner {
+  height: 160px;
+}
+
+.intraday-select {
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 6px;
+  background: white;
+}
+
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -460,4 +472,14 @@ td.muted {
 
 .down {
   color: var(--down);
+}
+
+.live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: var(--up);
+  vertical-align: middle;
 }
