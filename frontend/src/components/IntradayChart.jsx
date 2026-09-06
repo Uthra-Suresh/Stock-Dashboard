@@ -123,7 +123,7 @@ export default function IntradayChart({ symbol }) {
                 type="monotone"
                 dataKey="price"
                 stroke="#378ADD"
-                strokeWidth={1}
+                strokeWidth={1.5}
                 dot={false}
                 activeDot={{ r: 3, strokeWidth: 0 }}
                 isAnimationActive={false}

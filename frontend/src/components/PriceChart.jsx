@@ -262,7 +262,7 @@ export default function PriceChart({ rows }) {
                   dataKey={series.key}
                   name={series.label}
                   stroke={series.color}
-                  strokeWidth={1}
+                  strokeWidth={1.5}
                   dot={false}
                   activeDot={{ r: 3, strokeWidth: 0 }}
                   isAnimationActive={false}
