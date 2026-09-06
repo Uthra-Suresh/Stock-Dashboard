@@ -51,14 +51,37 @@ async function getCachedQuote(symbol) {
   return quote;
 }
 
+const IST_TIME_FORMAT = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Kolkata",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+const MARKET_OPEN_MIN = 9 * 60; // 09:00 IST -- a few minutes of buffer before the 09:15 open
+const MARKET_CLOSE_MIN = 15 * 60 + 35; // 15:35 IST -- a few minutes after the 15:30 close
+
+// stock-nse-india's primary chart endpoint only ever returns today's trading
+// session, but when it 404s (happens periodically) the library falls back to
+// a generic charting API that returns a rolling 24h window ending "now" --
+// not clipped to market hours. That mixes in the previous evening's/today's
+// after-hours flat padding, so clip to market hours ourselves either way.
+function isDuringMarketHours(ms) {
+  const parts = IST_TIME_FORMAT.formatToParts(new Date(ms));
+  const hour = Number(parts.find((p) => p.type === "hour").value);
+  const minute = Number(parts.find((p) => p.type === "minute").value);
+  const minutesOfDay = hour * 60 + minute;
+  return minutesOfDay >= MARKET_OPEN_MIN && minutesOfDay <= MARKET_CLOSE_MIN;
+}
+
 async function getCachedIntraday(symbol) {
   const hit = intradayCache.get(symbol);
   if (hit && Date.now() - hit.fetchedAt < CACHE_TTL_MS) return hit.data;
 
   const intraday = await nse.getEquityIntradayData(symbol);
-  // grapthData is [timestamp, price, marketStatus][] -- a raw LTP-vs-time
-  // trace, not OHLC candles, and only ever today's session.
-  const rows = (intraday?.grapthData || []).map(([time, price]) => ({ time, price }));
+  // grapthData is [timestamp, price, marketStatus][] -- a raw LTP-vs-time trace, not OHLC candles.
+  const rows = (intraday?.grapthData || [])
+    .map(([time, price]) => ({ time, price }))
+    .filter((row) => isDuringMarketHours(row.time));
   intradayCache.set(symbol, { data: rows, fetchedAt: Date.now() });
   return rows;
 }
