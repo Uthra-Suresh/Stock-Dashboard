@@ -1,33 +1,33 @@
 {
-  "updated": "2026-09-18T16:39:40+00:00",
+  "updated": "2026-09-21T18:17:38+00:00",
   "tickers": [
     {
       "symbol": "SIGMAADV",
-      "last": 866.1,
-      "changePct": 6.0,
-      "asOf": "2026-09-18",
+      "last": 908.95,
+      "changePct": 4.95,
+      "asOf": "2026-09-21",
       "rows": 1239
     },
     {
       "symbol": "ETERNAL",
-      "last": 326.85,
-      "changePct": 1.4,
-      "asOf": "2026-09-18",
-      "rows": 1241
+      "last": 335.9,
+      "changePct": 2.77,
+      "asOf": "2026-09-21",
+      "rows": 1240
     },
     {
       "symbol": "MANIPALHOS",
-      "last": 738.95,
-      "changePct": 2.41,
-      "asOf": "2026-09-18",
-      "rows": 33
+      "last": 747.15,
+      "changePct": 1.11,
+      "asOf": "2026-09-21",
+      "rows": 34
     },
     {
       "symbol": "SBIN",
-      "last": 996.2,
-      "changePct": 0.76,
-      "asOf": "2026-09-18",
-      "rows": 1241
+      "last": 996.0,
+      "changePct": -0.02,
+      "asOf": "2026-09-21",
+      "rows": 1240
     }
   ]
 }
