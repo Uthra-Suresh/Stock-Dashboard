@@ -1,19 +1,19 @@
 {
-  "updated": "2026-09-25T17:28:59+00:00",
+  "updated": "2026-09-28T19:48:32+00:00",
   "tickers": [
     {
       "symbol": "SIGMAADV",
       "last": 946.0,
       "changePct": -0.38,
       "asOf": "2026-09-25",
-      "rows": 1240
+      "rows": 1238
     },
     {
       "symbol": "ETERNAL",
       "last": 335.0,
       "changePct": -0.15,
       "asOf": "2026-09-25",
-      "rows": 1241
+      "rows": 1239
     },
     {
       "symbol": "MANIPALHOS",
@@ -27,7 +27,7 @@
       "last": 983.0,
       "changePct": 0.46,
       "asOf": "2026-09-25",
-      "rows": 1241
+      "rows": 1239
     }
   ]
 }
